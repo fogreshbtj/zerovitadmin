@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zero Visit Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#14213d;padding:24px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .header{margin-bottom:20px}
+    .header h1{font-size:28px;font-weight:800}
+    .header p{font-size:14px;color:#64748b;margin-top:6px}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px}
+    .card,.table-card{background:#fff;border-radius:22px;padding:18px;border:1px solid #e9eef5;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+    .stat-label{font-size:13px;color:#64748b;margin-bottom:8px}
+    .stat-value{font-size:34px;font-weight:800;color:#0b5cab}
+    .table-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+    .table-head h2{font-size:18px}
+    .search{height:42px;padding:0 14px;border:1px solid #dbe3ee;border-radius:12px;min-width:260px;width:100%}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{text-align:left;padding:14px 10px;border-bottom:1px solid #eef2f7;vertical-align:top}
+    th{font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+    td strong{display:block;font-size:14px}
+    td small{font-size:12px;color:#64748b}
+    .followers{font-size:13px;line-height:1.5}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef7ff;color:#0b5cab;font-size:11px;font-weight:800}
+    .empty{padding:18px;text-align:center;color:#64748b;font-size:14px}
+    @media (max-width:640px){
+      body{padding:14px}
+      .header h1{font-size:22px}
+      .search{min-width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>Zero Visit Admin</h1>
+      <p>Rekapitulasi data pengunjung</p>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <div class="stat-label">Total Kunjungan Hari Ini</div>
+        <div class="stat-value" id="today-total">0</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-head">
+        <h2>Daftar Pengunjung</h2>
+        <input id="search" class="search" type="text" placeholder="Cari nama, NIK, WBP..." />
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Pengunjung</th>
+              <th>WBP & Hubungan</th>
+              <th>Pengikut</th>
+              <th>Waktu Daftar</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admin-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    async function getBookings() {
+  try {
+    const url = "https://raw.githubusercontent.com/fogreshbtj/zerovitadmin/main/data/booking.json";
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!Array.isArray(data)) return [];
+
+    return data.reverse();
+  } catch {
+    return [];
+  }
+}
+
+    function countToday(list) {
+      const today = new Date().toISOString().slice(0,10);
+      return list.filter(item => {
+        const date = item.created_at ? item.created_at.slice(0,10) : null;
+        return date === today;
+      }).length;
+    }
+
+    async function renderTable(keyword = "") {
+  const body = document.getElementById("admin-body");
+
+  const master = await getBookings();
+
+  const list = master.filter(item => {
+    const q = keyword.toLowerCase();
+    return !q || [item.nama, item.nik, item.wbp].some(v =>
+      String(v || "").toLowerCase().includes(q)
+    );
+  });
+
+      document.getElementById("today-total").textContent = countToday(master);
+
+      if (!list.length) {
+        body.innerHTML = '<tr><td colspan="6" class="empty">Tidak ada data ditemukan</td></tr>';
+        return;
+      }
+
+      body.innerHTML = list.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>
+            <strong>${item.nama || '-'}</strong>
+            <small>${item.nik || '-'}</small>
+          </td>
+          <td>
+            <strong>${item.wbp || '-'}</strong>
+            <small>${item.relasi || '-'}</small>
+          </td>
+          <td class="followers">
+            L: ${item.pengikutLaki || 0}<br>
+            P: ${item.pengikutPerempuan || 0}<br>
+            A: ${item.pengikutAnak || 0}
+          </td>
+          <td>${item.created_at || '-'}</td>
+          <td><span class="badge">${item.status || '-'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('search').addEventListener('input', e => {
+      renderTable(e.target.value);
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
