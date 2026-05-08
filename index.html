@@ -144,6 +144,7 @@ td small{
           <tr>
             <th>No</th>
             <th>Pengunjung</th>
+            <th>Alamat</th>
             <th>WBP</th>
             <th>Relasi</th>
             <th>Pengikut</th>
@@ -206,21 +207,22 @@ function renderTable(keyword = "") {
 
   body.innerHTML = list.map((item, i) => `
     <tr>
-      <td>${i + 1}</td>
-      <td>
-        <strong>${item.nama || "-"}</strong>
-        <small>${item.nik || "-"}</small>
-      </td>
-      <td>${item.wbp || "-"}</td>
-      <td>${item.relasi || "-"}</td>
-      <td>
-        L: ${item.pengikutLaki || 0}<br>
-        P: ${item.pengikutPerempuan || 0}<br>
-        A: ${item.pengikutAnak || 0}
-      </td>
-      <td>${item.created_at || "-"}</td>
-      <td><span class="badge">${item.status || "-"}</span></td>
-    </tr>
+  <td>${i + 1}</td>
+  <td>
+    <strong>${item.nama || "-"}</strong>
+    <small>${item.nik || "-"}</small>
+  </td>
+  <td>${item.alamat || "-"}</td>
+  <td>${item.wbp || "-"}</td>
+  <td>${item.relasi || "-"}</td>
+  <td>
+    L: ${item.pengikutLaki || 0}<br>
+    P: ${item.pengikutPerempuan || 0}<br>
+    A: ${item.pengikutAnak || 0}
+  </td>
+  <td>${item.created_at || "-"}</td>
+  <td><span class="badge">${item.status || "-"}</span></td>
+</tr>
   `).join("");
 }
 
