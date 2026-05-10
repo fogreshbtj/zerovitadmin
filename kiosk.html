@@ -1,46 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-<title>Kiosk Scan</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-LINE Kiosk Scanner</title>
+
 <style>
 body{
   margin:0;
-  font-family:Arial;
   background:#000;
   color:#fff;
+  font-family:Arial;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   height:100vh;
+  overflow:hidden;
 }
+
 video{
   width:100%;
   max-width:500px;
   border-radius:12px;
+  border:2px solid #0b5cab;
 }
+
 #status{
   margin-top:20px;
   font-size:20px;
+  text-align:center;
+}
+
+#box{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.badge{
+  padding:8px 14px;
+  background:#0b5cab;
+  border-radius:999px;
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<video id="video" autoplay></video>
-<div id="status">Arahkan QR ke kamera</div>
+<div id="box">
+  <video id="video" autoplay></video>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <div id="status">Arahkan QR ke kamera</div>
+  <div class="badge">A-LINE KIOSK MODE</div>
+</div>
 
 <canvas id="canvas" hidden></canvas>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
 <script>
-if(localStorage.getItem("role") !== "kiosk"){
+/* ================= SECURITY ================= */
+if(sessionStorage.getItem("role") !== "kiosk"){
   alert("Akses ditolak");
   window.location.href = "admin.html";
 }
 
+/* ================= CONFIG ================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbzB3LYw7lDfHe4zhppYMX3rWxk9wNoD43elL9ftiwSuaKJ5zAQPcK7dKYSe5RPTBQysaA/exec";
+
+/* ================= CAMERA ================= */
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -52,8 +82,12 @@ navigator.mediaDevices.getUserMedia({
   video.srcObject = stream;
 });
 
+/* ================= LOCK SYSTEM (ANTI DOUBLE SCAN) ================= */
+let scanning = true;
+
+/* ================= SCAN LOOP ================= */
 function scan(){
-  if(video.readyState === video.HAVE_ENOUGH_DATA){
+  if(video.readyState === video.HAVE_ENOUGH_DATA && scanning){
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -61,11 +95,10 @@ function scan(){
     ctx.drawImage(video,0,0);
 
     const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-
     const code = jsQR(imageData.data, canvas.width, canvas.height);
 
     if(code){
-      checkIn(code.data);
+      handleScan(code.data);
     }
   }
 
@@ -74,43 +107,68 @@ function scan(){
 
 scan();
 
-function checkIn(qr){
-  fetch("API_URL_KAMU", {
+/* ================= HANDLE SCAN ================= */
+function handleScan(qr){
+
+  scanning = false;
+
+  status.innerText = "Memproses...";
+
+  fetch(API_URL, {
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({code:qr})
+    body:JSON.stringify({
+      code: qr,
+      action: "checkin"
+    })
   })
-  .then(res=>res.json())
-  .then(data=>{
+  .then(res => res.json())
+  .then(data => {
 
     if(data.status === "success"){
-      status.innerText = "CHECK-IN BERHASIL";
+      status.innerText = "CHECK-IN BERHASIL ✔";
 
       printTicket(data);
-
-      setTimeout(()=>{
-        status.innerText = "Arahkan QR ke kamera";
-      },1500);
 
     } else {
       status.innerText = "QR tidak valid / sudah digunakan";
     }
 
+    setTimeout(resetScan, 2000);
+
+  })
+  .catch(()=>{
+    status.innerText = "ERROR SERVER";
+    setTimeout(resetScan, 2000);
   });
 }
 
+/* ================= PRINT ================= */
 function printTicket(data){
   const w = window.open("","");
 
   w.document.write(`
-    <h2>Antrian A-LINE</h2>
-    <p>Nama: ${data.nama}</p>
-    <p>No: ${data.queue}</p>
-    <p>Waktu: ${data.time}</p>
+    <h2 style="text-align:center">A-LINE TICKET</h2>
+    <hr>
+    <p><b>Nama:</b> ${data.nama || "-"}</p>
+    <p><b>WBP:</b> ${data.wbp || "-"}</p>
+    <p><b>No Antrian:</b> ${data.queue || "-"}</p>
+    <p><b>Waktu:</b> ${new Date().toLocaleString()}</p>
   `);
 
   w.print();
 }
+
+/* ================= RESET ================= */
+function resetScan(){
+  status.innerText = "Arahkan QR ke kamera";
+  scanning = true;
+}
+
+/* ================= FULLSCREEN OPTIONAL ================= */
+document.body.addEventListener("click", ()=>{
+  document.documentElement.requestFullscreen?.();
+});
 </script>
 
 </body>
