@@ -98,12 +98,25 @@ td small{
 }
 .badge{
   display:inline-block;
-  padding:6px 10px;
+  padding:7px 14px;
   border-radius:999px;
-  background:#eef7ff;
-  color:#0b5cab;
   font-size:11px;
   font-weight:800;
+  letter-spacing:.04em;
+}
+
+/* STATUS BOOKED */
+.badge.booked{
+  background:#fee2e2;
+  color:#dc2626;
+  box-shadow:0 4px 12px rgba(220,38,38,.15);
+}
+
+/* STATUS CHECK-IN */
+.badge.checkin{
+  background:#dcfce7;
+  color:#16a34a;
+  box-shadow:0 4px 12px rgba(22,163,74,.15);
 }
 .empty{
   padding:22px;
@@ -243,7 +256,15 @@ function renderTable(keyword = "") {
     A: ${item.pengikutAnak || 0}
   </td>
   <td>${formatDate(item.created_at)}</td>
-  <td><span class="badge">${item.status || "-"}</span></td>
+  <td>
+  <span class="badge ${
+    String(item.status).toUpperCase() === "CHECK-IN"
+      ? "checkin"
+      : "booked"
+  }">
+    ${item.status || "-"}
+  </span>
+</td>
 </tr>
   `).join("");
 }
