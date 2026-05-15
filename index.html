@@ -6,52 +6,82 @@
 <title>A-LINE Admin</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0
+}
+
 body{
   font-family:Inter,Arial,sans-serif;
   background:#f5f7fb;
   color:#14213d;
   padding:22px;
 }
+
 .wrap{
-  max-width:1200px;
+  max-width:1400px;
   margin:auto;
 }
+
 .header{
   margin-bottom:20px;
 }
+
 .header h1{
   font-size:28px;
   font-weight:800;
 }
+
 .header p{
   color:#64748b;
   margin-top:6px;
   font-size:14px;
 }
+
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:16px;
   margin-bottom:18px;
 }
-.card,.table-card{
+
+.card,
+.table-card{
   background:#fff;
   border:1px solid #e8eef6;
   border-radius:22px;
   padding:18px;
   box-shadow:0 10px 28px rgba(0,0,0,.04);
 }
+
+.filter-card{
+  cursor:pointer;
+  transition:.25s;
+}
+
+.filter-card:hover{
+  transform:translateY(-4px);
+}
+
+.filter-card.active{
+  border:2px solid #2563eb;
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,.08);
+}
+
 .stat-label{
   font-size:13px;
   color:#64748b;
 }
+
 .stat-value{
   font-size:34px;
   font-weight:800;
   color:#0b5cab;
   margin-top:6px;
 }
+
 .table-head{
   display:flex;
   justify-content:space-between;
@@ -60,6 +90,7 @@ body{
   flex-wrap:wrap;
   margin-bottom:16px;
 }
+
 .search{
   height:44px;
   min-width:260px;
@@ -69,47 +100,53 @@ body{
   border:1px solid #dbe3ee;
   border-radius:14px;
 }
+
 .table-wrap{
   overflow-x:auto;
 }
+
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:900px;
+  min-width:1100px;
 }
-th,td{
+
+th,
+td{
   padding:14px 10px;
   border-bottom:1px solid #eef2f7;
   text-align:left;
   vertical-align:top;
 }
+
 th{
   font-size:12px;
   color:#64748b;
   text-transform:uppercase;
 }
+
 td strong{
   display:block;
   font-size:14px;
 }
+
 td small{
   font-size:12px;
   color:#64748b;
 }
+
 .badge{
   display:inline-block;
   padding:4px 30px;
   border-radius:999px;
-   
   font-weight:800;
   letter-spacing:.04em;
-  
 }
 
 /* STATUS BOOKED */
 .badge.booked{
   background:#fee2e2;
-  font-size:11px; 
+  font-size:11px;
   color:#dc2626;
   box-shadow:0 0px 20px rgba(220,38,38,.15);
 }
@@ -121,14 +158,23 @@ td small{
   color:#16a34a;
   box-shadow:0 0px 20px rgba(22,163,74,.15);
 }
+
 .empty{
   padding:22px;
   text-align:center;
   color:#64748b;
 }
+
 @media(max-width:640px){
-  body{padding:14px}
-  .header h1{font-size:22px}
+
+  body{
+    padding:14px
+  }
+
+  .header h1{
+    font-size:22px
+  }
+
 }
 </style>
 </head>
@@ -142,20 +188,50 @@ td small{
   </div>
 
   <div class="stats">
-    <div class="card">
+
+    <div class="card filter-card active" onclick="setFilter('ALL', this)">
       <div class="stat-label">Total Kunjungan Hari Ini</div>
       <div class="stat-value" id="today-total">0</div>
     </div>
+
+    <div class="card filter-card" onclick="setFilter('BOOKED', this)">
+      <div class="stat-label">BOOKED</div>
+      <div class="stat-value" id="booked-total">0</div>
+    </div>
+
+    <div class="card filter-card" onclick="setFilter('CHECK-IN', this)">
+      <div class="stat-label">CHECK-IN</div>
+      <div class="stat-value" id="checkin-total">0</div>
+    </div>
+
+    <div class="card filter-card" onclick="setFilter('TODAY', this)">
+      <div class="stat-label">Kunjungan Hari Ini</div>
+      <div class="stat-value" id="visit-today-total">0</div>
+    </div>
+
+    <div class="card filter-card" onclick="setFilter('TOMORROW', this)">
+      <div class="stat-label">Kunjungan Besok</div>
+      <div class="stat-value" id="visit-tomorrow-total">0</div>
+    </div>
+
   </div>
 
   <div class="table-card">
+
     <div class="table-head">
       <h2>Daftar Pengunjung</h2>
-      <input id="search" class="search" placeholder="Cari nama, NIK, WBP..." />
+
+      <input
+        id="search"
+        class="search"
+        placeholder="Cari nama, NIK, WBP..."
+      />
     </div>
 
     <div class="table-wrap">
+
       <table>
+
         <thead>
           <tr>
             <th>No</th>
@@ -169,144 +245,383 @@ td small{
             <th>Status</th>
           </tr>
         </thead>
+
         <tbody id="admin-body"></tbody>
+
       </table>
+
     </div>
+
   </div>
 
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxNR8AO5bPKNmYIgsv3k5YcYGWmZdBNC5g2KqVdVbWwDT_236vUQwAls_0DTAE9ee-umQ/exec";
+const API_URL =
+"https://script.google.com/macros/s/AKfycbxNR8AO5bPKNmYIgsv3k5YcYGWmZdBNC5g2KqVdVbWwDT_236vUQwAls_0DTAE9ee-umQ/exec";
 
 let master = [];
+let activeFilter = "ALL";
 
-async function getBookings() {
+/* =========================
+   GET DATA
+========================= */
+
+async function getBookings(){
+
   const res = await fetch(API_URL);
+
   const data = await res.json();
 
-  if (!Array.isArray(data)) return [];
+  if(!Array.isArray(data)) return [];
 
   return data.reverse();
 }
 
-function countToday(list) {
+/* =========================
+   FORMAT DATE
+========================= */
+
+function formatDate(value){
+
+  if(!value) return "-";
+
+  const d = new Date(value);
+
+  if(isNaN(d)) return value;
+
+  const parts =
+    new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Jakarta",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit",
+      hour:"2-digit",
+      minute:"2-digit",
+      hour12:false
+    }).formatToParts(d);
+
+  const get =
+    type =>
+      parts.find(p => p.type === type)?.value || "";
+
+  return `
+    ${get("year")}-${get("month")}-${get("day")}
+    ${get("hour")}:${get("minute")}
+  `;
+}
+
+/* =========================
+   FORMAT TANGGAL KUNJUNGAN
+========================= */
+
+function formatVisitDate(value){
+
+  if(!value) return "-";
+
+  const d = new Date(value);
+
+  if(isNaN(d)) return value;
+
+  return new Intl.DateTimeFormat("id-ID",{
+    timeZone:"Asia/Jakarta",
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+  }).format(d);
+}
+
+/* =========================
+   NORMALIZE DATE
+========================= */
+
+function normalizeDate(value){
+
+  if(!value) return "";
+
+  const d = new Date(value);
+
+  if(isNaN(d)) return "";
+
+  return new Intl.DateTimeFormat("en-CA",{
+    timeZone:"Asia/Jakarta",
+    year:"numeric",
+    month:"2-digit",
+    day:"2-digit"
+  }).format(d);
+}
+
+/* =========================
+   COUNT TODAY
+========================= */
+
+function countToday(list){
+
   const now = new Date();
+
   const today =
-    now.getFullYear() + "-" +
-    String(now.getMonth() + 1).padStart(2,"0") + "-" +
-    String(now.getDate()).padStart(2,"0");
+    new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Jakarta",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit"
+    }).format(now);
 
   return list.filter(item =>
-    String(item.created_at || "").startsWith(today)
+    normalizeDate(item.tanggalKunjungan) === today
   ).length;
 }
 
-  function formatDate(value) {
-  if (!value) return "-";
+/* =========================
+   FILTER
+========================= */
 
-  const d = new Date(value);
+function setFilter(type, el){
 
-  if (isNaN(d)) return value;
+  activeFilter = type;
 
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  }).formatToParts(d);
+  document
+    .querySelectorAll(".filter-card")
+    .forEach(card =>
+      card.classList.remove("active")
+    );
 
-  const get = type => parts.find(p => p.type === type)?.value || "";
+  if(el){
+    el.classList.add("active");
+  }
 
-  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
+  const searchInput =
+    document.getElementById("search");
+
+  renderTable(
+    searchInput ? searchInput.value : ""
+  );
 }
 
-  function formatVisitDate(value) {
+/* =========================
+   RENDER TABLE
+========================= */
 
-  if (!value) return "-";
+function renderTable(keyword = ""){
 
-  const d = new Date(value);
+  const body =
+    document.getElementById("admin-body");
 
-  if (isNaN(d)) return value;
+  const q =
+    keyword.toLowerCase();
 
-  return new Intl.DateTimeFormat("id-ID", {
-    timeZone: "Asia/Jakarta",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  }).format(d);
+  const now = new Date();
 
-}
+  const today =
+    new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Jakarta",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit"
+    }).format(now);
 
-function renderTable(keyword = "") {
-  const body = document.getElementById("admin-body");
+  const tomorrowDate = new Date();
 
-  const q = keyword.toLowerCase();
+  tomorrowDate.setDate(
+    tomorrowDate.getDate() + 1
+  );
+
+  const tomorrow =
+    new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Jakarta",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit"
+    }).format(tomorrowDate);
 
   const list = master.filter(item => {
-    return !q || [
-      item.nama,
-      item.nik,
-      item.wbp
-    ].some(v => String(v || "").toLowerCase().includes(q));
+
+    const visitDate =
+      normalizeDate(item.tanggalKunjungan);
+
+    const status =
+      String(item.status || "")
+      .toUpperCase();
+
+    const matchSearch =
+      !q ||
+      [
+        item.nama,
+        item.nik,
+        item.wbp
+      ].some(v =>
+        String(v || "")
+        .toLowerCase()
+        .includes(q)
+      );
+
+    if(!matchSearch) return false;
+
+    if(activeFilter === "BOOKED"){
+      return status === "BOOKED";
+    }
+
+    if(activeFilter === "CHECK-IN"){
+      return status === "CHECK-IN";
+    }
+
+    if(activeFilter === "TODAY"){
+      return visitDate === today;
+    }
+
+    if(activeFilter === "TOMORROW"){
+      return visitDate === tomorrow;
+    }
+
+    return true;
   });
 
-  document.getElementById("today-total").textContent = countToday(master);
+  /* =========================
+     UPDATE STATISTICS
+  ========================= */
 
-  if (!list.length) {
-    body.innerHTML = `<tr><td colspan="9" class="empty">Tidak ada data</td></tr>`;
+  document.getElementById("today-total")
+    .textContent =
+      countToday(master);
+
+  document.getElementById("booked-total")
+    .textContent =
+      master.filter(v =>
+        String(v.status)
+        .toUpperCase() === "BOOKED"
+      ).length;
+
+  document.getElementById("checkin-total")
+    .textContent =
+      master.filter(v =>
+        String(v.status)
+        .toUpperCase() === "CHECK-IN"
+      ).length;
+
+  document.getElementById("visit-today-total")
+    .textContent =
+      master.filter(v =>
+        normalizeDate(v.tanggalKunjungan) === today
+      ).length;
+
+  document.getElementById("visit-tomorrow-total")
+    .textContent =
+      master.filter(v =>
+        normalizeDate(v.tanggalKunjungan) === tomorrow
+      ).length;
+
+  /* =========================
+     EMPTY
+  ========================= */
+
+  if(!list.length){
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="9" class="empty">
+          Tidak ada data
+        </td>
+      </tr>
+    `;
+
     return;
   }
 
-  body.innerHTML = list.map((item, i) => `
-    <tr>
-  <td>${i + 1}</td>
+  /* =========================
+     TABLE
+  ========================= */
 
-  <td>
-  ${formatVisitDate(item.tanggalKunjungan)}
-</td>
-  <td>
-    <strong>${item.nama || "-"}</strong>
-    <small>${item.nik || "-"}</small>
-  </td>
-  <td>${item.alamat || "-"}</td>
-  <td>${item.wbp || "-"}</td>
-  <td>${item.relasi || "-"}</td>
-  <td>
-    L: ${item.pengikutLaki || 0}<br>
-    P: ${item.pengikutPerempuan || 0}<br>
-    A: ${item.pengikutAnak || 0}
-  </td>
-  <td>${formatDate(item.created_at)}</td>
-  <td>
-  <span class="badge ${
-    String(item.status).toUpperCase() === "CHECK-IN"
-      ? "checkin"
-      : "booked"
-  }">
-    ${item.status || "-"}
-  </span>
-</td>
-</tr>
-  `).join("");
+  body.innerHTML =
+    list.map((item, i) => `
+
+      <tr>
+
+        <td>${i + 1}</td>
+
+        <td>
+          ${formatVisitDate(item.tanggalKunjungan)}
+        </td>
+
+        <td>
+          <strong>${item.nama || "-"}</strong>
+          <small>${item.nik || "-"}</small>
+        </td>
+
+        <td>
+          ${item.alamat || "-"}
+        </td>
+
+        <td>
+          ${item.wbp || "-"}
+        </td>
+
+        <td>
+          ${item.relasi || "-"}
+        </td>
+
+        <td>
+          L: ${item.pengikutLaki || 0}<br>
+          P: ${item.pengikutPerempuan || 0}<br>
+          A: ${item.pengikutAnak || 0}
+        </td>
+
+        <td>
+          ${formatDate(item.created_at)}
+        </td>
+
+        <td>
+          <span class="badge ${
+            String(item.status)
+            .toUpperCase() === "CHECK-IN"
+              ? "checkin"
+              : "booked"
+          }">
+
+            ${item.status || "-"}
+
+          </span>
+        </td>
+
+      </tr>
+
+    `).join("");
 }
 
-async function init() {
+/* =========================
+   INIT
+========================= */
+
+async function init(){
+
   master = await getBookings();
+
   renderTable();
 
   setInterval(async () => {
+
     master = await getBookings();
-    renderTable(document.getElementById("search").value);
-  }, 5000);
+
+    const searchInput =
+      document.getElementById("search");
+
+    renderTable(
+      searchInput ? searchInput.value : ""
+    );
+
+  },5000);
 }
 
-document.getElementById("search").addEventListener("input", e => {
-  renderTable(e.target.value);
-});
+/* =========================
+   SEARCH
+========================= */
+
+document
+  .getElementById("search")
+  .addEventListener("input", e => {
+
+    renderTable(e.target.value);
+
+  });
 
 init();
 </script>
