@@ -159,6 +159,7 @@ td small{
         <thead>
           <tr>
             <th>No</th>
+            <th>Tanggal Kunjungan</th>
             <th>Pengunjung</th>
             <th>Alamat</th>
             <th>WBP</th>
@@ -246,6 +247,10 @@ function renderTable(keyword = "") {
   body.innerHTML = list.map((item, i) => `
     <tr>
   <td>${i + 1}</td>
+
+  <td>
+    ${item.tanggalKunjungan || "-"}
+  </td>
   <td>
     <strong>${item.nama || "-"}</strong>
     <small>${item.nik || "-"}</small>
