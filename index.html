@@ -224,6 +224,23 @@ function countToday(list) {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
 }
 
+  function formatVisitDate(value) {
+
+  if (!value) return "-";
+
+  const d = new Date(value);
+
+  if (isNaN(d)) return value;
+
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(d);
+
+}
+
 function renderTable(keyword = "") {
   const body = document.getElementById("admin-body");
 
@@ -249,8 +266,8 @@ function renderTable(keyword = "") {
   <td>${i + 1}</td>
 
   <td>
-    ${item.tanggalKunjungan || "-"}
-  </td>
+  ${formatVisitDate(item.tanggalKunjungan)}
+</td>
   <td>
     <strong>${item.nama || "-"}</strong>
     <small>${item.nik || "-"}</small>
